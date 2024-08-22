@@ -3,13 +3,25 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class RoleController extends Controller
+class RoleController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+
+            new Middleware('permission:view roles', only: ['index']),
+            new Middleware('permission:edit roles', only: ['edit']),
+            new Middleware('permission:create roles', only: ['create']),
+            new Middleware('permission:delete roles', only: ['destroy']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -41,7 +53,7 @@ class RoleController extends Controller
             $validator = Validator::make($request->all(),[
                 'name' => 'required|unique:roles|min:3'
             ]);
-    
+
             if($validator->passes())
             {
                 $data = $validator->validated();
@@ -52,7 +64,7 @@ class RoleController extends Controller
                         $role->givePermissionTo($name);
                     }
                 }
-                
+
                 return redirect()->route('roles.index')->with('success','Role is created successfully.');
             }
             else
@@ -88,7 +100,7 @@ class RoleController extends Controller
                 'hasPermissions' => $hasPermissions
             ]);
 
-        
+
     }
 
     /**
@@ -97,7 +109,7 @@ class RoleController extends Controller
     public function update(Request $request, string $id)
     {
        try{
-        
+
         $validator = Validator::make($request->all(),[
             'name' => 'required|min:3|unique:roles,name,'.$id.',id',  //This checks if the entered role is not present in table except for current one
         ]);
@@ -111,13 +123,13 @@ class RoleController extends Controller
             $role->save();
 
             if(!empty($request->permission)){
-                
+
                 $role->syncPermissions($request->permission);
             }
             else {
                 $role->syncPermissions([]);
             }
-            
+
             return redirect()->route('roles.index')->with('success','Role is updated successfully.');
         }
         else
@@ -142,7 +154,7 @@ class RoleController extends Controller
        {
             session()->flash('error','Role not found');
             return response()->json([
-                'stauts' => false,
+                'status' => false,
             ]);
        }
 
@@ -150,7 +162,7 @@ class RoleController extends Controller
 
        session()->flash('success','Role deleted successfully');
        return response()->json([
-           'stauts' => true,
+           'status' => true,
        ]);
 
     }

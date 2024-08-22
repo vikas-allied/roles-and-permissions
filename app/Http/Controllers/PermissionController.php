@@ -6,9 +6,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class PermissionController extends Controller
+
+class PermissionController extends Controller implements HasMiddleware
 {
+
+    public static function middleware(): array
+    {
+        return [
+
+            new Middleware('permission:view permissions', only: ['index']),
+            new Middleware('permission:edit permissions', only: ['edit']),
+            new Middleware('permission:create permissions', only: ['create']),
+            new Middleware('permission:delete permissions', only: ['destroy']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -45,13 +60,13 @@ class PermissionController extends Controller
             $validator = Validator::make($request->all(),[
                 'name' => 'required|unique:permissions|min:3'
             ]);
-    
+
             if($validator->passes())
             {
-                
+
                 $data = $validator->validated();
                 Permission::create($data);
-                
+
                 return redirect()->route('permissions.index')->with('success','Permisson is created successfully.');
             }
             else
@@ -62,7 +77,7 @@ class PermissionController extends Controller
         {
             return redirect()->route('permissions.create')->with('error','Somthing went wrong Try Again!');
         }
-        
+
     }
 
     /**
@@ -101,15 +116,15 @@ class PermissionController extends Controller
             $validator = Validator::make($request->all(),[
                 'name' => 'required|min:3|unique:permissions,name,'.$id.',id'
             ]);
-    
+
             if($validator->passes())
             {
-                
+
                 $data = $validator->validated();
                 $permission = Permission::findOrFail($id);
                 $permission->name = $data['name'];
                 $permission->save();
-                
+
                 return redirect()->route('permissions.index')->with('success','Permisson is Updated successfully.');
             }
             else
@@ -128,7 +143,7 @@ class PermissionController extends Controller
     public function destroy(string $id)
     {
         $permission = Permission::find($id);
-        
+
         if($permission == null) {
             session()->flash('error', 'Permission not found');
             return response()->json([

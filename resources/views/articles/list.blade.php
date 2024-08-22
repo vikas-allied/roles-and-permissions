@@ -4,7 +4,9 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Article / List') }}
             </h2>
+            @can('create articles')
             <a href="{{ route('articles.create') }}" class="bg-slate-700 py-2 px-4 rounded-lg text-white">Create</a>
+            @endcan
         </div>
     </x-slot>
 
@@ -30,8 +32,13 @@
                             <td class="px-6 py-3 text-left">{{ $article->author }}</td>
                             <td class="px-6 py-3 text-left">{{ \Carbon\Carbon::parse($article->created_at)->format('d M, Y') }}</td>
                             <td class="px-6 py-3 text-center">
+                                @can('edit articles')
                                 <a href="{{ route('articles.edit', ['article' => $article->id]) }}" class="bg-slate-700 hover:bg-slate-600 py-2 px-4 rounded-lg text-white">Edit</a>
+                                @endcan
+
+                                @can('delete articles')
                                 <a href="javascript:void(0)" onclick="deleteArticle({{ $article->id }})" class="bg-red-600 hover:bg-red-500 py-2 px-4 rounded-lg text-white">Delete</a>
+                                @endcan
                             </td>
                         </tr>
                     @empty
@@ -46,7 +53,7 @@
                 {{ $articles->links() }}
             </div>
 
-           
+
         </div>
     </div>
 
@@ -54,7 +61,7 @@
     <script type="text/javascript">
 
     function deleteArticle(id) {
-           
+
            if (confirm('Are you sure you want to delete this article?')) {
                $.ajax({
                    url: `{{ url('articles')}}/${id}`,
@@ -69,7 +76,7 @@
                })
            }
        }
-   
+
 
     </script>
 </x-slot>
